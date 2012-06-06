@@ -6,11 +6,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -308,10 +309,15 @@ public class Model implements Buildable {
 
 	private Class<?> getGeneratedComponent(URLClassLoader loader) {
 		try {
-			// TODO Generate Digest instead of UUID.
-			String name = "Comp_"
-					+ UUID.randomUUID().toString().replace('-', '_');
-			String source = generateSource(name);
+			StringBuilder s1 = generateSource();
+
+			String digest = getDigest(s1.toString());
+			String name = "Comp_" + digest;
+			int indexOf = s1.indexOf("$$$");
+			s1.replace(indexOf, indexOf + 3, name);
+
+			String source = s1.toString();
+
 			if (log.isLoggable(Level.FINE)) {
 				log.fine("Generated Class :" + name);
 				log.fine("Generated Source:\n" + source);
@@ -335,7 +341,23 @@ public class Model implements Buildable {
 		}
 	}
 
-	private String generateSource(String cname) throws Exception {
+	public static String getDigest(String source) {
+
+		try {
+			final MessageDigest instance = MessageDigest.getInstance("MD5");
+			instance.update(source.getBytes());
+			byte[] digest = instance.digest();
+			final StringBuilder sb = new StringBuilder(digest.length * 2);
+			for (final byte element : digest) {
+				sb.append(Integer.toHexString(0xFF & element));
+			}
+			return sb.toString();
+		} catch (final NoSuchAlgorithmException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private StringBuilder generateSource() throws Exception {
 		if (control != null) {
 			if (control.indexOf('.') == -1) {
 				throw new IllegalArgumentException(
@@ -348,7 +370,7 @@ public class Model implements Buildable {
 		b.append("import java.util.*;\n");
 		b.append("import oms3.*;\n");
 		b.append("import oms3.annotations.*;\n");
-		b.append("public class " + cname + " extends " + controlClass + " {\n");
+		b.append("public class " + "$$$" + " extends " + controlClass + " {\n");
 		b.append("\n");
 
 		// Fields
@@ -402,7 +424,7 @@ public class Model implements Buildable {
 		b.append("  initializeComponents();\n");
 		b.append(" }\n");
 		b.append("}\n");
-		return b.toString();
+		return b;
 	}
 
 	void kvpExpand(StringBuilder b, List<KVP> l, String method) {
