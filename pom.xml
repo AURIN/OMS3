@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>au.org.aurin</groupId>
 	<artifactId>oms3</artifactId>
-	<version>0.2-SNAPSHOT</version>
+	<version>0.2</version>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
