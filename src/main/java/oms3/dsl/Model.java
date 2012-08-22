@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import oms3.ComponentException;
 import oms3.annotations.Name;
@@ -24,9 +22,12 @@ import oms3.io.CSTable;
 import oms3.io.DataIO;
 import oms3.util.Components;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Model implements Buildable {
 
-	protected static final Logger log = Logger.getLogger("oms3.sim");
+  private static Logger log = LoggerFactory.getLogger("oms3.sim");
 	//
 	String classname;
 	Resource res;
@@ -131,8 +132,8 @@ public class Model implements Buildable {
 	private static List<File> getExtraResources() {
 		List<File> sc = new ArrayList<File>();
 		String simPath = System.getProperty("oms.sim.resources");
-		if (log.isLoggable(Level.CONFIG)) {
-			log.config("oms.sim.resources '" + simPath + "'");
+    if (log.isDebugEnabled()) {
+      log.debug("oms.sim.resources '" + simPath + "'");
 		}
 		if (simPath != null && !simPath.isEmpty()) {
 			simPath = simPath.replaceAll("\"", "");
@@ -151,44 +152,40 @@ public class Model implements Buildable {
 	 */
 	private synchronized URLClassLoader getClassLoader() {
 		if (modelClassLoader == null) {
-			List<File> jars = res.filterFiles("jar"); // jars as defined in
-			List<File> cli_jars = getExtraResources(); // cli extra jars
-			List<File> dirs = res.filterDirectories(); // testing
-			List<URL> urls = new ArrayList<URL>();
+      List<File> jars = res.filterFiles("jar"); // jars as defined in
+      List<File> cli_jars = getExtraResources(); // cli extra jars
+      List<File> dirs = res.filterDirectories(); // testing
+      List<URL> urls = new ArrayList<URL>();
 
-			try {
-				for (int i = 0; i < jars.size(); i++) {
-					urls.add(jars.get(i).toURI().toURL());
-					if (log.isLoggable(Level.CONFIG)) {
-						log.config("classpath entry from simulation: "
-								+ jars.get(i));
-					}
-				}
-				for (int i = 0; i < dirs.size(); i++) {
-					urls.add(dirs.get(i).toURI().toURL());
-					if (log.isLoggable(Level.CONFIG)) {
-						log.config("dir entry: " + dirs.get(i));
-					}
-				}
-				for (int i = 0; i < cli_jars.size(); i++) {
-					urls.add(cli_jars.get(i).toURI().toURL());
-					if (log.isLoggable(Level.CONFIG)) {
-						log.config("classpath entry from CLI: "
-								+ cli_jars.get(i));
-					}
-				}
-				String omsPrj = System.getProperty("oms.prj");
-				if (omsPrj != null) {
-					urls.add(new URL("file:" + omsPrj + "/dist/"));
-					if (log.isLoggable(Level.CONFIG)) {
-						log.config("Sim loading classpath : " + "file:"
-								+ omsPrj + "/dist/");
-					}
-				}
-			} catch (MalformedURLException ex) {
-				throw new ComponentException("Illegal resource:"
-						+ ex.getMessage());
-			}
+      try {
+        for (int i = 0; i < jars.size(); i++) {
+          urls.add(jars.get(i).toURI().toURL());
+          if (log.isDebugEnabled()) {
+            log.debug("classpath entry from simulation: " + jars.get(i));
+          }
+        }
+        for (int i = 0; i < dirs.size(); i++) {
+          urls.add(dirs.get(i).toURI().toURL());
+          if (log.isDebugEnabled()) {
+            log.debug("dir entry: " + dirs.get(i));
+          }
+        }
+        for (int i = 0; i < cli_jars.size(); i++) {
+          urls.add(cli_jars.get(i).toURI().toURL());
+          if (log.isDebugEnabled()) {
+            log.debug("classpath entry from CLI: " + cli_jars.get(i));
+          }
+        }
+        String omsPrj = System.getProperty("oms.prj");
+        if (omsPrj != null) {
+          urls.add(new URL("file:" + omsPrj + "/dist/"));
+          if (log.isDebugEnabled()) {
+            log.debug("Sim loading classpath : " + "file:" + omsPrj + "/dist/");
+          }
+        }
+      } catch (MalformedURLException ex) {
+        throw new ComponentException("Illegal resource:" + ex.getMessage());
+      }
 			modelClassLoader = new URLClassLoader(urls.toArray(new URL[0]),
 					Thread.currentThread().getContextClassLoader());
 		}
@@ -268,7 +265,7 @@ public class Model implements Buildable {
 						Name name = class1.getAnnotation(Name.class);
 						if (name != null && !name.value().isEmpty()) {
 							if (name.value().indexOf(".") > -1) {
-								log.warning("@Name cannot contain '.' character : "
+                log.warn("@Name cannot contain '.' character : "
 										+ name.value()
 										+ " in  "
 										+ class1.getName());
@@ -277,12 +274,12 @@ public class Model implements Buildable {
 							String prev = nameClassMap.put(name.value(),
 									class1.getName());
 							if (prev != null) {
-								log.warning("duplicate @Name: " + name.value()
+                log.warn("duplicate @Name: " + name.value()
 										+ " for " + prev + " and "
 										+ class1.getName());
 							}
-							if (log.isLoggable(Level.CONFIG)) {
-								log.config("Added '@Name' alias '"
+              if (log.isDebugEnabled()) {
+                log.debug("Added '@Name' alias '"
 										+ name.value() + "' for class: "
 										+ class1.getName());
 							}
@@ -318,14 +315,14 @@ public class Model implements Buildable {
 
 			String source = s1.toString();
 
-			if (log.isLoggable(Level.FINE)) {
-				log.fine("Generated Class :" + name);
-				log.fine("Generated Source:\n" + source);
+      if (log.isDebugEnabled()) {
+        log.debug("Generated Class :" + name);
+        log.debug("Generated Source:\n" + source);
 			}
 
 			ModelCompiler mc = ModelCompiler.create(System
 					.getProperty("oms.modelcompiler"));
-			Class jc = mc.compile(log, loader, name, source);
+			Class jc = mc.compile(loader, name, source);
 
 			// TODO refactor for more generic use (internal, external compiler).
 			// oms3.compiler.Compiler.compile1(log, name, source); // This is
