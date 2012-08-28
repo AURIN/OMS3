@@ -12,11 +12,13 @@ import java.io.Writer;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import oms3.ComponentException;
 import oms3.util.Processes;
@@ -27,7 +29,9 @@ import oms3.util.Processes;
  */
 public abstract class ModelCompiler {
 
-    public abstract Class<?> compile(Logger log, URLClassLoader loader, String name, String src) throws Exception;
+  static Logger log = LoggerFactory.getLogger("oms3.sim");
+
+    public abstract Class<?> compile(URLClassLoader loader, String name, String src) throws Exception;
 
     public static ModelCompiler create(String sysprop) {
         if ("javac".equals(sysprop)) {
@@ -50,8 +54,8 @@ public abstract class ModelCompiler {
         JavaCompiler jc = ToolProvider.getSystemJavaCompiler();
 
         @Override
-        public Class<?> compile(Logger log, URLClassLoader loader, String name, String src) throws Exception {
-            log.fine("Expernal compiler");
+        public Class<?> compile(URLClassLoader loader, String name, String src) throws Exception {
+      log.debug("Expernal compiler");
             File classDir = new File(System.getProperty("oms.prj") + File.separatorChar + "dist");
             File srcDir = new File(System.getProperty("java.io.tmpdir"));
 
@@ -73,7 +77,7 @@ public abstract class ModelCompiler {
     private static class Memory extends ModelCompiler {
 
         @Override
-        public Class<?> compile(Logger log, URLClassLoader loader, String name, String src) throws Exception {
+        public Class<?> compile(URLClassLoader loader, String name, String src) throws Exception {
             log.info("Memory compiler");
             oms3.compiler.Compiler tc = oms3.compiler.Compiler.singleton(loader);
             Class jc = tc.compileSource(name, src);
@@ -85,7 +89,7 @@ public abstract class ModelCompiler {
         // javac -cp "/home/od/.oms/3.1rc6/oms-all.jar:/od/projects/oms_examples/oms3.prj.csm/dist/csm.jar" /tmp/Comp_f61514ea_4e12_431c_a26b_b6b016c273df.java -d /tmp/javafiles
 
         @Override
-        public Class<?> compile(final Logger log, URLClassLoader loader, String name, String src) throws Exception {
+        public Class<?> compile(URLClassLoader loader, String name, String src) throws Exception {
             log.info("Javac compiler");
             File classDir = new File(System.getProperty("oms.prj") + File.separatorChar + "dist");
             File srcDir = new File(System.getProperty("java.io.tmpdir"));
@@ -101,8 +105,8 @@ public abstract class ModelCompiler {
 
                 @Override
                 public void write(char[] cbuf, int off, int len) throws IOException {
-                    if (log.isLoggable(Level.FINE)) {
-                        log.fine(new String(cbuf, off, len));
+          if (log.isDebugEnabled()) {
+            log.debug(new String(cbuf, off, len));
                     }
                 }
 
@@ -119,8 +123,8 @@ public abstract class ModelCompiler {
 
                 @Override
                 public void write(char[] cbuf, int off, int len) throws IOException {
-                    if (log.isLoggable(Level.SEVERE)) {
-                        log.severe(new String(cbuf, off, len));
+          if (log.isErrorEnabled()) {
+            log.error(new String(cbuf, off, len));
                     }
                 }
 
@@ -138,7 +142,7 @@ public abstract class ModelCompiler {
                 throw new ComponentException("Commpile failed for " + javaFile);
             }
 
-            if (log.isLoggable(Level.INFO)) {
+      if (log.isInfoEnabled()) {
                 log.info("succesfully compiled -> " + javaFile + " to " + classDir);
             }
 
