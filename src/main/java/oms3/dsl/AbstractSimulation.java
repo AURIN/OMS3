@@ -19,7 +19,6 @@ import ngmf.ui.PEditor;
 import ngmf.util.OutputStragegy;
 import oms3.ComponentAccess;
 import oms3.ComponentException;
-import oms3.dsl.analysis.Chart;
 import oms3.io.CSProperties;
 import oms3.io.DataIO;
 
@@ -35,7 +34,7 @@ abstract public class AbstractSimulation implements Buildable {
     Resource res = new Resource();
     OutputDescriptor output = new OutputDescriptor();
     List<Output> out = new ArrayList<Output>();
-    Chart analysis;
+  // Chart analysis;
     //
     Exec build;
 
@@ -75,8 +74,8 @@ abstract public class AbstractSimulation implements Buildable {
             Output e = new Output();
             out.add(e);
             return e;
-        } else if (name.equals("analysis")) {
-            return analysis = new Chart();
+      // } else if (name.equals("analysis")) {
+      // return analysis = new Chart();
         } else if (name.equals("outputstrategy")) {
             return output;
         } else if (name.equals("build")) {
@@ -107,15 +106,15 @@ abstract public class AbstractSimulation implements Buildable {
         throw new UnsupportedOperationException("Not supported.");
     }
 
-    public void graph() throws Exception {
-        if (analysis != null) {
-            OutputStragegy st = getOutput().getOutputStrategy(getName());
-            nativeLF();
-            analysis.run(st, getName());
-        } else {
-            throw new ComponentException("No analysis element defined.");
-        }
-    }
+  // public void graph() throws Exception {
+  // if (analysis != null) {
+  // OutputStragegy st = getOutput().getOutputStrategy(getName());
+  // nativeLF();
+  // analysis.run(st, getName());
+  // } else {
+  // throw new ComponentException("No analysis element defined.");
+  // }
+  // }
 
     public void doc() throws Exception {
         throw new UnsupportedOperationException("Not supported.");
