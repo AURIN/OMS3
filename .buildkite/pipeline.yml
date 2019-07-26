@@ -1,0 +1,41 @@
+---
+steps:
+  - label: "Linting :lint-roller:"
+    command: "git diff-tree --no-commit-id --name-only -r ${BUILDKITE_COMMIT} | xargs pre-commit run --files"
+  - label: ":maven: Testing"
+    agents:
+      jdk7: "true"
+      docker: "true"
+    command:
+      - 'mvn -Pjdk7 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}" clean verify'
+  - label: ":maven: Test JDK 8"
+    agents:
+      jdk8: "true"
+      docker: "true"
+    command:
+      - 'mvn -Pjdk8 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}-jdk8" clean verify'
+    soft_fail:
+      - exit_status: 1
+  - label: ":maven: Test JDK 11"
+    agents:
+      jdk11: "true"
+      docker: "true"
+    command:
+      - 'mvn -Pjdk11 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}-jdk11" clean verify'
+    soft_fail:
+      - exit_status: 1
+  - label: ":maven: Verify"
+    agents:
+      jdk7: "true"
+      docker: "true"
+    branches: "develop"
+    command:
+      - 'mvn -Pjdk7 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}" clean verify sonar:sonar'
+  - wait
+  - label: ":maven: Deploy"
+    branches: "develop"
+    agents:
+      jdk7: "true"
+    concurrency: 1
+    concurrency_group: "aurin/oms3/package"
+    command: "mvn -Pjdk7 -DskipTests -DskipITs clean deploy"
