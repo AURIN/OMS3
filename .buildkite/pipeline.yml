@@ -9,6 +9,7 @@ steps:
     command:
       - 'mvn -Pjdk7 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}" clean verify'
   - label: ":maven: Test JDK 8"
+    branches: "!master"
     agents:
       jdk8: "true"
       docker: "true"
@@ -17,6 +18,7 @@ steps:
     soft_fail:
       - exit_status: 1
   - label: ":maven: Test JDK 11"
+    branches: "!master"
     agents:
       jdk11: "true"
       docker: "true"
@@ -28,12 +30,12 @@ steps:
     agents:
       jdk7: "true"
       docker: "true"
-    branches: "develop"
+    branches: "master"
     command:
       - 'mvn -Pjdk7 -Dchangelist="-${BUILDKITE_BUILD_NUMBER}" clean verify sonar:sonar'
   - wait
   - label: ":maven: Deploy"
-    branches: "develop"
+    branches: "master"
     agents:
       jdk7: "true"
     concurrency: 1
